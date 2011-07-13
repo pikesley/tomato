@@ -5,7 +5,7 @@ I borrowed the idea from Gregg Hansen's excellent bash script:
 
     http://beekl.es/5w
 
-and rewrote it in python. Gregg's script was for backing up a farm of tomato routers, my script just does a single device.
+and rewrote it in python. Gregg's script was for backing up a farm of tomato routers, my script just does a single device (but it would be easy enough to modify it for multiple devices).
 
 Using it
 --------
