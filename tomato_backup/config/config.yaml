@@ -1,0 +1,7 @@
+host:
+  name:      tomato #.home.param3.com
+  user:      admin
+  password:  EbreNRzmOt8nVo4u
+
+paths:
+  dumps:     /tomato/data/backups/tomato_router/
