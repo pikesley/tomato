@@ -1,1 +1,21 @@
 Simple python script to backup the config from my Tomato router
+---------------------------------------------------------------
+
+I borrowed the idea from Gregg Hansen's excellent bash script:
+
+    http://beekl.es/5w
+
+and rewrote it in python. Gregg's script was for backing up a farm of tomato
+routers, my script just does a single device.
+
+Using it
+--------
+
+You will require:
+
+* python-yaml (apt-get install python-yaml on Ubuntu-ish systems, there's
+  presumably a python egg too)
+* https enabled on your router
+
+Then it's very simple, cp config/config.yaml-sample to config/config.yaml and
+fill in the details, then run ./backup.py
