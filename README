@@ -20,3 +20,4 @@ Then it's very simple, cp config/config.yaml-sample to config/config.yaml and fi
 It works for me, but please be aware that is a quick hack I threw together in about an hour. If you're using it to backup your mission-critical multi-million-dollar infrastructure, well, you probably want to test it more than I did.
 
 This is also an excuse to play with github :)
+
