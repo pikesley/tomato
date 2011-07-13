@@ -1,0 +1,7 @@
+host:
+  name:      tomato
+  user:      admin
+  password:  passwordgoeshere
+
+paths:
+  dumps:     /path/to/backup/directory/
