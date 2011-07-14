@@ -12,75 +12,127 @@ import re
 import time
 from datetime import datetime
 
-# get today's date in ISO-ish format (this has always seemed way too complex to
-# me, I think I must be doing it wrong)
-datestamp = time.strftime("%Y-%m-%d",
+###############################################################################
+
+
+class Tomato(dict):
+    """Class representing a Tomato device"""
+    def __init__(self, name):
+        self['name'] = name
+
+# do some configuration
+        self.config = yaml.load(open('config/config.yaml'))
+        self.update(self.config['hosts'][self['name']])
+
+# do these things
+        self.set_date()
+        self.set_paths()
+        self.set_regexes()
+        self.extract_data()
+
+###############################################################################
+
+    def set_date(self):
+        """Set the date stamp for the dump file"""
+
+# this has always seemed horrendously complicated to me. I think I'm doing it
+# wrong
+        self['datestamp'] = time.strftime("%Y-%m-%d",
                             datetime.fromtimestamp(time.time()).timetuple())
 
-# load up our config
-config = yaml.load(open('config/config.yaml'))
+###############################################################################
 
-# construct the base URL of the tomato router
-baseurl = "https://%s:%s@%s" % (
-                                config['host']['user'],
-                                config['host']['password'],
-                                config['host']['name'])
+    def set_regexes(self):
+        """Set up the regexes to match bits of the HTML from the admin page"""
 
-print "Retrieving data from %s..." % config['host']['name'],
+# pack them into this dict
+        self['regexes'] = {}
 
-# grab the HTML as a list of lines
-lines = urllib.urlopen("%s/admin-config.asp" % baseurl).readlines()
-print "done"
+# they're actually defined in the config file
+        for key in self.config['regexes']:
+            self['regexes'][key] = re.compile(self.config['regexes'][key])
 
-# we want to extract lines that match these patterns (and capture the (.*)
-# bits)
-regexes = {
-    'version': re.compile(".*<div class='version'>Version (.*)</div>.*"),
-    'mac': re.compile(".*et0macaddr: '..:..:..:(.*)',.*"),
-    'httpd_id': re.compile(".*http_id: '(.*)',.*")}
+###############################################################################
 
-# we will store stuff in here
-data = {}
+    def extract_data(self):
+        """Pull the interesting bits out of the admin page HTML"""
 
-print "Extracting data...",
+# read the page into a list of strings
+        lines = urllib.urlopen(
+            "%s/admin-config.asp" % self['baseurl']).readlines()
 
-# so line by line
-for line in lines:
+# for each line
+        for line in lines:
 
-# try to match each regex
-    for regex in regexes:
-        m = regexes[regex].match(line)
+# try each regex
+            for regex in self['regexes']:
+                m = self['regexes'][regex].match(line)
 
 # if we got a match
-        if m:
+                if m:
 
-# we store the matched group into the data dict under the key from the regex
-# dict. we do the 'split/join' thing to remove the ':'s from the MAC address
-            data[regex] = "".join(m.group(1).split(':'))
-print "done"
+# set the captured value in ourself under the key from the regexes hash
+# the split/join thing is to remove the ':'s from the MAV address
+                    self[regex] = "".join(m.group(1).split(':'))
 
-print "Downloading config file...",
+###############################################################################
 
-# construct the config filename
-filename = "tomato_v%s_m%s.cfg" % (data['version'], data['mac'])
+    def set_paths(self):
+        """Set some paths we'll use later"""
 
-# and the URL from which we can retrieve it
-url = "%s/cfg/%s?_http_id=%s" % (baseurl, filename, data['httpd_id'])
+# construct the base URL of the Tomato
+        self['baseurl'] = "https://%s:%s@%s" % (
+                                self['user'],
+                                self['password'],
+                                self['name'])
 
-# we will dump it to this dir
-outdir = os.path.join(config['paths']['dumps'], datestamp)
+# we'll send our dump to this dir
+        self['outdir'] = os.path.join(
+                                self.config['paths']['dumps'],
+                                self['datestamp'])
 
-# the dir needs to exist (python really needs something 'mkdir -p'-ish)
-try:
-    os.makedirs(outdir)
-except OSError:
-    pass
+# the dir needs to exist (python needs something 'mkdir -p'-ish)
+        try:
+            os.makedirs(self['outdir'])
+        except OSError:
+            pass
 
-# this shall be our dump file (it comes as a .gz)
-outfile = os.path.join(
-                        outdir,
-                        "%s.%s.cfg.gz" % (config['host']['name'], datestamp))
+# the path for the actual dump file
+        self['outfile'] = os.path.join(
+                        self['outdir'],
+                        "%s.%s.cfg.gz" % (self['name'], self['datestamp']))
 
-# actually download the file
-u = urllib.urlretrieve(url, outfile)
-print "done"
+###############################################################################
+
+    def download(self):
+        """Actually download the config"""
+
+# the filename (on the Tomato)
+        self['filename'] = "tomato_v%s_m%s.cfg" % (
+                                                self['version'], self['mac'])
+
+# the URL for the file
+        self['url'] = "%s/cfg/%s?_http_id=%s" % (
+                                self['baseurl'],
+                                self['filename'],
+                                self['httpd_id'])
+
+# grab the file and dump it
+        urllib.urlretrieve(self['url'], self['outfile'])
+
+###############################################################################
+
+# if we're called on the command line
+if __name__ == '__main__':
+
+# grab all entries from the 'hosts' stanza in the config file
+    toms = yaml.load(open('config/config.yaml'))['hosts']
+
+# for each one
+    for tom in toms:
+
+# make a tomato
+        t = Tomato(tom)
+
+# do the download
+        t.download()

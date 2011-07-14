@@ -1,7 +1,24 @@
-host:
-  name:      tomato
-  user:      admin
-  password:  passwordgoeshere
+# define your hosts in this section
+hosts:
+  tomato: # resolvable name of device
+    user:      admin
+    password:  passwordgoeshere
+
+# we can list more devices here
+#  cucumber:
+#    user:      admin
+#    password:  otherpassword
+
+###############################################################################
 
 paths:
-  dumps:     /path/to/backup/directory/
+# where the dump files go
+  dumps:       /tomato/data/backups/tomato_router/
+ 
+###############################################################################
+
+# these match the interesting bits of the admin page HTML
+regexes:
+  version:     ".*<div class='version'>Version (.*)</div>.*"
+  mac:         ".*et0macaddr: '..:..:..:(.*)',.*"
+  httpd_id:    ".*http_id: '(.*)',.*"
