@@ -7,43 +7,61 @@ import os
 
 # will add objecty shit up in here
 
-config = yaml.load(open('config/config.yaml'))
+class TomatoConfig(dict):
+    def __init__(self, path):
+        self['path'] = path
+        self.populate()
 
-dump_dir = config['paths']['dumps']
+    def populate(self):
+        f = gzip.open(self['path'])
+        s = ""
+        try:
+            byte = f.read(1)
+            while byte != "":
+                s += byte
+                if byte == "\x00":
+                    b = s.split("=")
+                    try:
+                        if not b[1] == "\x00":
+                            self[b[0]] = b[1]
+                    except IndexError:
+                        pass
 
-files = os.listdir(dump_dir)
-files.sort()
+                    s = ""
+                byte = f.read(1)
+        finally:
+            f.close()
 
-fd = os.path.join(dump_dir, files[-1])
-fn = os.listdir(fd)[0]
-fp = os.path.join(fd, fn)
+    def get(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            return None
 
-f = gzip.open(fp, 'rb')
+    def __repr__(self):
+        s = ""
+        wide = 0
+        for key in self:
+            if len(key) > wide:
+                wide = len(key)
 
-d = {}
-s = ""
-try:
-    byte = f.read(1)
-    while byte != "":
-        s += byte
-        if byte == "\x00":
-            b = s.split("=")
-            try:
-                if not b[1] == "\x00":
-                    d[b[0]] = b[1]
-            except IndexError:
-                pass
+        frmt = "%%%ds:	%%s" % wide
+        for key in self:
+            s += frmt % (key, self[key])
+            s += "\n"
 
-            s = ""
-        byte = f.read(1)
-finally:
-    f.close()
+        return s
 
-wide = 0
-for key in d:
-    if len(key) > wide:
-        wide = len(key)
+if __name__ == '__main__':
+    config = yaml.load(open('config/config.yaml'))
+    dump_dir = config['paths']['dumps']
+    files = os.listdir(dump_dir)
+    files.sort()
+    fd = os.path.join(dump_dir, files[-1])
+    fn = os.listdir(fd)[0]
+    fp = os.path.join(fd, fn)
 
-frmt = "%%%ds:	%%s" % wide
-for key in d:
-    print frmt % (key, d[key])
+    tc = TomatoConfig(fp)
+    print tc
+
+
