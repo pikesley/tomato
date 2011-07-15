@@ -5,6 +5,8 @@ import sys
 import yaml
 import os
 
+# will add objecty shit up in here
+
 config = yaml.load(open('config/config.yaml'))
 
 dump_dir = config['paths']['dumps']
