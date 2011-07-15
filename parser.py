@@ -5,8 +5,6 @@ import sys
 import yaml
 import os
 
-# will add objecty shit up in here
-
 class TomatoConfig(dict):
     def __init__(self, path):
         self['path'] = path
