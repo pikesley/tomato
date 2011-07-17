@@ -50,6 +50,7 @@ class TomatoConfig(dict):
 
         return s
 
+# if we're called on the command line
 if __name__ == '__main__':
     config = yaml.load(open('config/config.yaml'))
     dump_dir = config['paths']['dumps']
