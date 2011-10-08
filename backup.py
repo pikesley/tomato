@@ -10,7 +10,7 @@ import sys
 import os
 import re
 import time
-from datetime import datetime
+import datetime
 
 ###############################################################################
 
@@ -35,10 +35,7 @@ class Tomato(dict):
     def set_date(self):
         """Set the date stamp for the dump file"""
 
-# this has always seemed horrendously complicated to me. I think I'm doing it
-# wrong
-        self['datestamp'] = time.strftime("%Y-%m-%d",
-                            datetime.fromtimestamp(time.time()).timetuple())
+        self['datestamp'] = str(datetime.date.today())
 
 ###############################################################################
 
